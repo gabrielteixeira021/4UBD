@@ -1,0 +1,1 @@
+Compare o tempo de execução da query com e sem índice

@@ -1,0 +1,17 @@
+-- php myadmin SQL query
+ANALYZE
+SELECT *
+FROM vendas
+WHERE data_venda BETWEEN DATE('2025-01-01') AND DATE('2025-06-30');
+
+-- mysql
+EXPLAIN ANALYZE
+SELECT *
+FROM vendas
+WHERE data_venda BETWEEN DATE('2025-01-01') AND DATE('2025-06-30');
+
+-- postgresql )
+EXPLAIN (ANALYZE, BUFFERS, TIMING)
+SELECT *
+FROM vendas
+WHERE data_venda BETWEEN DATE '2025-01-01' AND DATE '2025-06-30';

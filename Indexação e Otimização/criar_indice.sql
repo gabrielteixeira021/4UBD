@@ -1,0 +1,1 @@
+CREATE INDEX idx_data_venda ON vendas(data_venda)
