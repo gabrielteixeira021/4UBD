@@ -1,0 +1,149 @@
+ENTIDADES
+1. OBRA (Metadados do livro  o que não muda por exemplar)
+id_obra (PK)
+titulo
+isbn (único por obra)
+edicao
+ano_publicacao
+id_editora (FK  opcional)
+ 
+Aqui ficam os dados que não variam por exemplar.
+Ex: “Sistemas Operacionais – 10ª edição – ISBN 978-...” → 1 registro.
+ 
+2. AUTOR (mantido)
+id_autor (PK)
+nome
+nacionalidade
+data_nascimento
+ 
+ OBRA_AUTOR (mantido  relacionamento N:N)
+id_obra (FK)
+id_autor (FK)
+ 
+
+3. EXEMPLAR (Representa cada unidade física do livro  o que pode ser emprestado)
+id_exemplar (PK)
+id_obra (FK)
+codigo_patrimonio (ex: “BIB-2024-00123”  único por exemplar)
+status (Disponível, Emprestado, Reservado, Danificado, Extraviado)
+data_aquisicao
+localizacao (ex: “Prateleira A3, Corredor 2”)
+ 
+Cada exemplar é único, mas herda os metadados da OBRA.
+➤ Performance: Consultas por título/autor/jornal vão na tabela OBRA (pequena e indexada).
+➤ Escalabilidade: 1.000 exemplares = 1.000 registros leves, sem repetir texto.
+ 
+4. ESTOQUE_OBRA (Tabela de agregação  opcional, mas recomendada para performance extrema)
+id_obra (PK, FK)
+quantidade_total
+quantidade_disponivel
+quantidade_emprestada
+quantidade_reservada
+ 
+ Atualizada por TRIGGER a cada:
+Inserção/exclusão de EXEMPLAR
+Mudança de status de EXEMPLAR (ex: de Disponível → Emprestado) 
+ Vantagens:
+Consulta instantânea: “Quantos livros de X estão disponíveis?” → 1 SELECT, sem COUNT(*) em milhões de exemplares.
+Evita JOINs pesadas em telas de catálogo.
+Permite alertas automáticos (ex: “estoque abaixo de 3”).
+⚠️ Importante: Essa tabela é derivada  não é a fonte da verdade, mas um cache otimizado. A fonte da verdade é EXEMPLAR.
+ 
+
+5. EMPRÉSTIMO 
+id_emprestimo (PK)
+id_aluno	 (FK)
+id_exemplar (FK)
+data_emprestimo
+data_prevista_devolucao
+data_devolucao
+status
+ 
+6. RESERVA
+id_reserva (PK)
+id_usuario (FK)
+id_obra (FK) ← reserva é por OBRA, não por exemplar!
+data_reserva
+status
+data_expiracao
+ 
+7. MULTA (mantida, mas vinculada ao empréstimo do exemplar)
+id_multa (PK)
+id_emprestimo (FK)
+valor_original
+valor_atual
+data_criacao
+data_pagamento
+status
+
+8. PARAMETRO_MULTA (mantida  para reajustes dinâmicos)
+id_parametro
+valor_por_dia
+data_inicio_vigencia
+data_fim_vigencia
+descrição
+
+
+
+
+
+
+
+
+## USUARIOS DO SISTEMA
+
+
+1. Tabela Base: USUARIO
+
+Campos comuns a todos os tipos de usuários:
+
+· id_usuario (INT, PK) - Identificador único
+· matricula (VARCHAR(20)) - Número de matrícula único
+· email_institucional (VARCHAR(255)) - Email institucional único
+· senha_hash (VARCHAR(255)) - Hash da senha
+· nome_completo (VARCHAR(255)) - Nome completo do usuário
+· tipo_usuario (ENUM) - Tipo: 'aluno', 'professor' ou 'administracao'
+· data_cadastro (TIMESTAMP) - Data de criação do registro
+· status (ENUM) - Status: 'ativo', 'inativo' ou 'bloqueado'
+· telefone (VARCHAR(20)) - Telefone para contato
+· data_nascimento (DATE) - Data de nascimento
+
+2. Tabela Especializada: ALUNO
+
+Campos específicos para alunos:
+
+· id_aluno (INT, PK, FK) - Chave primária e estrangeira para USUARIO
+· curso (VARCHAR(100)) - Curso do aluno
+· semestre (INT) - Semestre atual
+· turno (ENUM) - Turno: 'matutino', 'vespertino' ou 'noturno'
+· data_ingresso (DATE) - Data de ingresso na instituição
+
+3. Tabela Especializada: PROFESSOR
+
+Campos específicos para professores:
+
+· id_professor (INT, PK, FK) - Chave primária e estrangeira para USUARIO
+· departamento (VARCHAR(100)) - Departamento de lotação
+· titulacao (ENUM) - Titulação: 'graduacao', 'especializacao', 'mestrado' ou 'doutorado'
+· regime_trabalho (ENUM) - Regime: '20h', '40h' ou 'DE' (Dedicação Exclusiva)
+· data_contratacao (DATE) - Data de contratação
+
+4. Tabela Especializada: ADMINISTRACAO
+
+Campos específicos para administradores:
+
+· id_administracao (INT, PK, FK) - Chave primária e estrangeira para USUARIO
+· setor (VARCHAR(100)) - Setor de atuação
+· nivel_acesso (ENUM) - Nível: 'operador', 'supervisor' ou 'gerente'
+· funcao (VARCHAR(100)) - Função exercida
+· data_admissao (DATE) - Data de admissão
+
+Relacionamentos Conceituais
+
+1. Relação de Herança:
+   · Cada tabela especializada (ALUNO, PROFESSOR, ADMINISTRACAO) possui uma relação 1:1 com a tabela base USUARIO
+   · A chave primária das tabelas especializadas é também chave estrangeira para USUARIO.id_usuario
+2. Discriminador de Tipo:
+   · O campo tipo_usuario na tabela base atua como discriminador, indicando qual tabela especializada contém os dados complementares
+3. Integridade Referencial:
+   · Um registro em USUARIO deve ter exatamente um registro correspondente em uma das tabelas especializadas, de acordo com o valor de tipo_usuario.
