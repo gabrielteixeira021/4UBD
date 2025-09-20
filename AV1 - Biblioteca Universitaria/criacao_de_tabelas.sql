@@ -1,0 +1,139 @@
+CREATE TABLE OBRA 
+( 
+ id_obra INT PRIMARY KEY,  
+ isbn INT NOT NULL,  
+ titulo VARCHAR(n) NOT NULL,  
+ edicao INT NOT NULL,  
+ ano_publicacao DATE NOT NULL,  
+ idESTOQUE_OBRA INT,  
+ UNIQUE (isbn)
+); 
+
+CREATE TABLE AUTOR 
+( 
+ data_nascimento DATE NOT NULL,  
+ nacionalidade VARCHAR(n) NOT NULL,  
+ nome VARCHAR(n),  
+ id_autor INT PRIMARY KEY,  
+); 
+
+CREATE TABLE EXEMPLAR 
+( 
+ id_exemplar INT PRIMARY KEY,  
+ status INT,  
+ data_aquisicao DATE NOT NULL,  
+ localizacao VARCHAR(n) NOT NULL,  
+ idOBRA INT,  
+); 
+
+CREATE TABLE ESTOQUE_OBRA 
+( 
+ id_obra INT PRIMARY KEY,  
+ quantidade_reservada INT,  
+ quantidade_emprestada INT,  
+ quantidade_total INT,  
+ quantidade_disponivel INT,  
+); 
+
+CREATE TABLE EMPRESTIMO 
+( 
+ id_emprestimo INT PRIMARY KEY,  
+ data_emprestimo DATE NOT NULL,  
+ data_prevista_devolucao DATE NOT NULL,  
+ data_devolucao DATE NOT NULL,  
+ status VARCHAR(n) NOT NULL,  
+ idEXEMPLAR INT,  
+ idMULTA INT,  
+); 
+
+CREATE TABLE USUARIO 
+( 
+ id_usuario INT PRIMARY KEY,  
+ matricula VARCHAR(n) NOT NULL,  
+ email_institucional VARCHAR(n) NOT NULL,  
+ senha_hash VARCHAR(n) NOT NULL,  
+ nome_completo INT,  
+ tipo_usuario INT,  
+ status INT NOT NULL,  
+ telefone INT,  
+ data_nascimento DATE NOT NULL,  
+ data_cadastro DATE NOT NULL,  
+ idEMPRESTIMO INT,  
+); 
+
+CREATE TABLE RESERVA 
+( 
+ data_reserva DATE,  
+ id_reserva INT PRIMARY KEY,  
+ status INT,  
+ data_expiracao DATE NOT NULL,  
+ idOBRA INT,  
+ idUSUARIO INT,  
+); 
+
+CREATE TABLE MULTA 
+( 
+ id_multa INT PRIMARY KEY,  
+ valor_original FLOAT NOT NULL,  
+ valor_atual FLOAT NOT NULL,  
+ data_criacao DATE NOT NULL,  
+ data_pagamento DATE NOT NULL,  
+ status VARCHAR(n) NOT NULL,  
+ idPARAMETRO_MULTA INT,  
+); 
+
+CREATE TABLE PARAMETRO_MULTA 
+( 
+ id_parametro INT PRIMARY KEY,  
+ valor_por_dia FLOAT NOT NULL,  
+ data_inicio_vigencia DATE NOT NULL,  
+ data_fim_vigencia DATE NOT NULL,  
+ descricao VARCHAR(n),  
+); 
+
+CREATE TABLE ALUNO 
+( 
+ curso INT NOT NULL,  
+ semestre INT NOT NULL,  
+ turno VARCHAR(n),  
+ data_ingresso DATE,  
+ idUSUARIO INT,  
+); 
+
+CREATE TABLE PROFESSOR 
+( 
+ titulacao VARCHAR(n) NOT NULL,  
+ departamento VARCHAR(n) NOT NULL,  
+ regime_trabalho INT,  
+ data_contratacao DATE NOT NULL,  
+ idUSUARIO INT,  
+); 
+
+CREATE TABLE ADMINISTRADOR 
+( 
+ setor VARCHAR(n),  
+ nivel_acesso VARCHAR(n) NOT NULL,  
+ funcao INT,  
+ data_admissao DATE NOT NULL,  
+ idUSUARIO INT,  
+); 
+
+CREATE TABLE OBRA_AUTOR 
+( 
+ id_autor INT PRIMARY KEY,  
+ id_obra INT PRIMARY KEY,  
+); 
+
+ALTER TABLE OBRA ADD FOREIGN KEY(idESTOQUE_OBRA) REFERENCES ESTOQUE_OBRA (idESTOQUE_OBRA)
+ALTER TABLE EXEMPLAR ADD FOREIGN KEY(idOBRA) REFERENCES OBRA (idOBRA)
+ALTER TABLE EMPRESTIMO ADD FOREIGN KEY(idEXEMPLAR) REFERENCES EXEMPLAR (idEXEMPLAR)
+ALTER TABLE EMPRESTIMO ADD FOREIGN KEY(idMULTA) REFERENCES MULTA (idMULTA)
+ALTER TABLE USUARIO ADD FOREIGN KEY(idEMPRESTIMO) REFERENCES EMPRESTIMO (idEMPRESTIMO)
+ALTER TABLE RESERVA ADD FOREIGN KEY(idOBRA) REFERENCES OBRA (idOBRA)
+ALTER TABLE RESERVA ADD FOREIGN KEY(idUSUARIO) REFERENCES USUARIO (idUSUARIO)
+ALTER TABLE MULTA ADD FOREIGN KEY(idPARAMETRO_MULTA) REFERENCES PARAMETRO_MULTA (idPARAMETRO_MULTA)
+ALTER TABLE ALUNO ADD FOREIGN KEY(idUSUARIO) REFERENCES USUARIO (idUSUARIO)
+ALTER TABLE PROFESSOR ADD FOREIGN KEY(idUSUARIO) REFERENCES USUARIO (idUSUARIO)
+ALTER TABLE ADMINISTRADOR ADD FOREIGN KEY(idUSUARIO) REFERENCES USUARIO (idUSUARIO)
+ALTER TABLE OBRA_AUTOR ADD FOREIGN KEY(id_autor) REFERENCES AUTOR (id_autor)
+ALTER TABLE OBRA_AUTOR ADD FOREIGN KEY(id_obra) REFERENCES OBRA (id_obra)
