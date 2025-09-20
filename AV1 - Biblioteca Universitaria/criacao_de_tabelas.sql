@@ -1,139 +1,155 @@
-CREATE TABLE OBRA 
-( 
- id_obra INT PRIMARY KEY,  
- isbn INT NOT NULL,  
- titulo VARCHAR(n) NOT NULL,  
- edicao INT NOT NULL,  
- ano_publicacao DATE NOT NULL,  
- idESTOQUE_OBRA INT,  
- UNIQUE (isbn)
-); 
-
-CREATE TABLE AUTOR 
-( 
- data_nascimento DATE NOT NULL,  
- nacionalidade VARCHAR(n) NOT NULL,  
- nome VARCHAR(n),  
- id_autor INT PRIMARY KEY,  
-); 
-
-CREATE TABLE EXEMPLAR 
-( 
- id_exemplar INT PRIMARY KEY,  
- status INT,  
- data_aquisicao DATE NOT NULL,  
- localizacao VARCHAR(n) NOT NULL,  
- idOBRA INT,  
-); 
-
-CREATE TABLE ESTOQUE_OBRA 
-( 
- id_obra INT PRIMARY KEY,  
- quantidade_reservada INT,  
- quantidade_emprestada INT,  
- quantidade_total INT,  
- quantidade_disponivel INT,  
-); 
-
-CREATE TABLE EMPRESTIMO 
-( 
- id_emprestimo INT PRIMARY KEY,  
- data_emprestimo DATE NOT NULL,  
- data_prevista_devolucao DATE NOT NULL,  
- data_devolucao DATE NOT NULL,  
- status VARCHAR(n) NOT NULL,  
- idEXEMPLAR INT,  
- idMULTA INT,  
-); 
-
-CREATE TABLE USUARIO 
-( 
- id_usuario INT PRIMARY KEY,  
- matricula VARCHAR(n) NOT NULL,  
- email_institucional VARCHAR(n) NOT NULL,  
- senha_hash VARCHAR(n) NOT NULL,  
- nome_completo INT,  
- tipo_usuario INT,  
- status INT NOT NULL,  
- telefone INT,  
- data_nascimento DATE NOT NULL,  
- data_cadastro DATE NOT NULL,  
- idEMPRESTIMO INT,  
-); 
-
-CREATE TABLE RESERVA 
-( 
- data_reserva DATE,  
- id_reserva INT PRIMARY KEY,  
- status INT,  
- data_expiracao DATE NOT NULL,  
- idOBRA INT,  
- idUSUARIO INT,  
-); 
-
-CREATE TABLE MULTA 
-( 
- id_multa INT PRIMARY KEY,  
- valor_original FLOAT NOT NULL,  
- valor_atual FLOAT NOT NULL,  
- data_criacao DATE NOT NULL,  
- data_pagamento DATE NOT NULL,  
- status VARCHAR(n) NOT NULL,  
- idPARAMETRO_MULTA INT,  
-); 
-
+-- Tabela de Parâmetros de Multa (deve vir primeiro por questões de referência)
 CREATE TABLE PARAMETRO_MULTA 
 ( 
- id_parametro INT PRIMARY KEY,  
- valor_por_dia FLOAT NOT NULL,  
- data_inicio_vigencia DATE NOT NULL,  
- data_fim_vigencia DATE NOT NULL,  
- descricao VARCHAR(n),  
-); 
+    id_parametro INT PRIMARY KEY,  
+    valor_por_dia DECIMAL(10,2) NOT NULL,  
+    data_inicio_vigencia DATE NOT NULL,  
+    data_fim_vigencia DATE,  
+    descricao VARCHAR(255)
+);
 
+-- Tabela de Autor
+CREATE TABLE AUTOR 
+( 
+    id_autor INT PRIMARY KEY,  
+    nome VARCHAR(255) NOT NULL,  
+    nacionalidade VARCHAR(100) NOT NULL,  
+    data_nascimento DATE NOT NULL
+);
+
+-- Tabela de Estoque (deve vir antes de OBRA)
+CREATE TABLE ESTOQUE_OBRA 
+( 
+    id_estoque_obra INT PRIMARY KEY,  
+    quantidade_reservada INT DEFAULT 0,  
+    quantidade_emprestada INT DEFAULT 0,  
+    quantidade_total INT DEFAULT 0,  
+    quantidade_disponivel INT DEFAULT 0
+);
+
+-- Tabela de Obra
+CREATE TABLE OBRA 
+( 
+    id_obra INT PRIMARY KEY,  
+    isbn VARCHAR(20) NOT NULL,  
+    titulo VARCHAR(255) NOT NULL,  
+    edicao INT NOT NULL,  
+    ano_publicacao YEAR NOT NULL,  
+    id_estoque_obra INT,  
+    UNIQUE (isbn),
+    FOREIGN KEY (id_estoque_obra) REFERENCES ESTOQUE_OBRA(id_estoque_obra)
+);
+
+-- Tabela de Exemplar
+CREATE TABLE EXEMPLAR 
+( 
+    id_exemplar INT PRIMARY KEY,  
+    codigo_patrimonio VARCHAR(50) UNIQUE NOT NULL,
+    status ENUM('Disponível', 'Emprestado', 'Reservado', 'Danificado', 'Extraviado') NOT NULL,  
+    data_aquisicao DATE NOT NULL,  
+    localizacao VARCHAR(100) NOT NULL,  
+    id_obra INT NOT NULL,  
+    FOREIGN KEY (id_obra) REFERENCES OBRA(id_obra)
+);
+
+-- Tabela Base de Usuários
+CREATE TABLE USUARIO 
+( 
+    id_usuario INT PRIMARY KEY,  
+    matricula VARCHAR(20) UNIQUE NOT NULL,  
+    email_institucional VARCHAR(255) UNIQUE NOT NULL,  
+    senha_hash VARCHAR(255) NOT NULL,  
+    nome_completo VARCHAR(255) NOT NULL,  
+    tipo_usuario ENUM('aluno', 'professor', 'administrador') NOT NULL,  
+    status ENUM('ativo', 'inativo', 'bloqueado') NOT NULL,  
+    telefone VARCHAR(20),  
+    data_nascimento DATE NOT NULL,  
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de Empréstimo
+CREATE TABLE EMPRESTIMO 
+( 
+    id_emprestimo INT PRIMARY KEY,  
+    data_emprestimo DATE NOT NULL,  
+    data_prevista_devolucao DATE NOT NULL,  
+    data_devolucao DATE,  
+    status ENUM('ativo', 'concluído', 'atrasado') NOT NULL,  
+    id_exemplar INT NOT NULL,  
+    id_usuario INT NOT NULL,
+    FOREIGN KEY (id_exemplar) REFERENCES EXEMPLAR(id_exemplar),
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
+);
+
+-- Tabela de Multa
+CREATE TABLE MULTA 
+( 
+    id_multa INT PRIMARY KEY,  
+    id_emprestimo INT NOT NULL,
+    valor_original DECIMAL(10,2) NOT NULL,  
+    valor_atual DECIMAL(10,2) NOT NULL,  
+    data_criacao DATE NOT NULL,  
+    data_pagamento DATE,  
+    status ENUM('pendente', 'paga', 'cancelada') NOT NULL,  
+    id_parametro_multa INT,
+    FOREIGN KEY (id_emprestimo) REFERENCES EMPRESTIMO(id_emprestimo),
+    FOREIGN KEY (id_parametro_multa) REFERENCES PARAMETRO_MULTA(id_parametro)
+);
+
+-- Tabela de Reserva
+CREATE TABLE RESERVA 
+( 
+    id_reserva INT PRIMARY KEY,  
+    id_usuario INT NOT NULL,  
+    id_obra INT NOT NULL,  
+    data_reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
+    status ENUM('ativa', 'cancelada', 'expirada', 'concluída') NOT NULL,  
+    data_expiracao DATE NOT NULL,
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario),
+    FOREIGN KEY (id_obra) REFERENCES OBRA(id_obra)
+);
+
+-- Tabelas Especializadas de Usuários
 CREATE TABLE ALUNO 
 ( 
- curso INT NOT NULL,  
- semestre INT NOT NULL,  
- turno VARCHAR(n),  
- data_ingresso DATE,  
- idUSUARIO INT,  
-); 
+    id_usuario INT PRIMARY KEY,  
+    curso VARCHAR(100) NOT NULL,  
+    semestre INT NOT NULL,  
+    turno ENUM('matutino', 'vespertino', 'noturno'),  
+    data_ingresso DATE,
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
+);
 
 CREATE TABLE PROFESSOR 
 ( 
- titulacao VARCHAR(n) NOT NULL,  
- departamento VARCHAR(n) NOT NULL,  
- regime_trabalho INT,  
- data_contratacao DATE NOT NULL,  
- idUSUARIO INT,  
-); 
+    id_usuario INT PRIMARY KEY,  
+    departamento VARCHAR(100) NOT NULL,  
+    titulacao ENUM('graduacao', 'especializacao', 'mestrado', 'doutorado') NOT NULL,  
+    regime_trabalho ENUM('20h', '40h', 'DE') NOT NULL,  
+    data_contratacao DATE NOT NULL,
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
+);
 
 CREATE TABLE ADMINISTRADOR 
 ( 
- setor VARCHAR(n),  
- nivel_acesso VARCHAR(n) NOT NULL,  
- funcao INT,  
- data_admissao DATE NOT NULL,  
- idUSUARIO INT,  
-); 
+    id_usuario INT PRIMARY KEY,  
+    setor VARCHAR(100),  
+    nivel_acesso ENUM('operador', 'supervisor', 'gerente') NOT NULL,  
+    funcao VARCHAR(100),  
+    data_admissao DATE NOT NULL,
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
+);
 
+-- Tabela de Relacionamento Obra-Autor
 CREATE TABLE OBRA_AUTOR 
 ( 
- id_autor INT PRIMARY KEY,  
- id_obra INT PRIMARY KEY,  
-); 
+    id_obra INT NOT NULL,  
+    id_autor INT NOT NULL,  
+    PRIMARY KEY (id_obra, id_autor),
+    FOREIGN KEY (id_obra) REFERENCES OBRA(id_obra),
+    FOREIGN KEY (id_autor) REFERENCES AUTOR(id_autor)
+);
 
-ALTER TABLE OBRA ADD FOREIGN KEY(idESTOQUE_OBRA) REFERENCES ESTOQUE_OBRA (idESTOQUE_OBRA)
-ALTER TABLE EXEMPLAR ADD FOREIGN KEY(idOBRA) REFERENCES OBRA (idOBRA)
-ALTER TABLE EMPRESTIMO ADD FOREIGN KEY(idEXEMPLAR) REFERENCES EXEMPLAR (idEXEMPLAR)
-ALTER TABLE EMPRESTIMO ADD FOREIGN KEY(idMULTA) REFERENCES MULTA (idMULTA)
-ALTER TABLE USUARIO ADD FOREIGN KEY(idEMPRESTIMO) REFERENCES EMPRESTIMO (idEMPRESTIMO)
-ALTER TABLE RESERVA ADD FOREIGN KEY(idOBRA) REFERENCES OBRA (idOBRA)
-ALTER TABLE RESERVA ADD FOREIGN KEY(idUSUARIO) REFERENCES USUARIO (idUSUARIO)
-ALTER TABLE MULTA ADD FOREIGN KEY(idPARAMETRO_MULTA) REFERENCES PARAMETRO_MULTA (idPARAMETRO_MULTA)
-ALTER TABLE ALUNO ADD FOREIGN KEY(idUSUARIO) REFERENCES USUARIO (idUSUARIO)
-ALTER TABLE PROFESSOR ADD FOREIGN KEY(idUSUARIO) REFERENCES USUARIO (idUSUARIO)
-ALTER TABLE ADMINISTRADOR ADD FOREIGN KEY(idUSUARIO) REFERENCES USUARIO (idUSUARIO)
-ALTER TABLE OBRA_AUTOR ADD FOREIGN KEY(id_autor) REFERENCES AUTOR (id_autor)
-ALTER TABLE OBRA_AUTOR ADD FOREIGN KEY(id_obra) REFERENCES OBRA (id_obra)
+-- Adicionando a FK faltante em USUARIO (se necessário)
+ALTER TABLE USUARIO ADD COLUMN id_emprestimo INT;
+ALTER TABLE USUARIO ADD FOREIGN KEY(id_emprestimo) REFERENCES EMPRESTIMO(id_emprestimo);
