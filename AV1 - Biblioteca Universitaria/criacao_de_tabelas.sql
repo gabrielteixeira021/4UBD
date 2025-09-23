@@ -1,7 +1,7 @@
 -- Tabela de Parâmetros de Multa (deve vir primeiro por questões de referência)
 CREATE TABLE PARAMETRO_MULTA 
 ( 
-    id_parametro INT PRIMARY KEY,  
+    id_parametro INT PRIMARY KEY AUTO_INCREMENT,  
     valor_por_dia DECIMAL(10,2) NOT NULL,  
     data_inicio_vigencia DATE NOT NULL,  
     data_fim_vigencia DATE,  
@@ -11,7 +11,7 @@ CREATE TABLE PARAMETRO_MULTA
 -- Tabela de Autor
 CREATE TABLE AUTOR 
 ( 
-    id_autor INT PRIMARY KEY,  
+    id_autor INT PRIMARY KEY AUTO_INCREMENT,  
     nome VARCHAR(255) NOT NULL,  
     nacionalidade VARCHAR(100) NOT NULL,  
     data_nascimento DATE NOT NULL
@@ -20,7 +20,7 @@ CREATE TABLE AUTOR
 -- Tabela de Estoque (deve vir antes de OBRA)
 CREATE TABLE ESTOQUE_OBRA 
 ( 
-    id_estoque_obra INT PRIMARY KEY,  
+    id_estoque_obra INT PRIMARY KEY AUTO_INCREMENT,  
     quantidade_reservada INT DEFAULT 0,  
     quantidade_emprestada INT DEFAULT 0,  
     quantidade_total INT DEFAULT 0,  
@@ -30,7 +30,7 @@ CREATE TABLE ESTOQUE_OBRA
 -- Tabela de Obra
 CREATE TABLE OBRA 
 ( 
-    id_obra INT PRIMARY KEY,  
+    id_obra INT PRIMARY KEY AUTO_INCREMENT,  
     isbn VARCHAR(20) NOT NULL,  
     titulo VARCHAR(255) NOT NULL,  
     edicao INT NOT NULL,  
@@ -43,7 +43,7 @@ CREATE TABLE OBRA
 -- Tabela de Exemplar
 CREATE TABLE EXEMPLAR 
 ( 
-    id_exemplar INT PRIMARY KEY,  
+    id_exemplar INT PRIMARY KEY AUTO_INCREMENT,  
     codigo_patrimonio VARCHAR(50) UNIQUE NOT NULL,
     status ENUM('Disponível', 'Emprestado', 'Reservado', 'Danificado', 'Extraviado') NOT NULL,  
     data_aquisicao DATE NOT NULL,  
@@ -55,7 +55,7 @@ CREATE TABLE EXEMPLAR
 -- Tabela Base de Usuários
 CREATE TABLE USUARIO 
 ( 
-    id_usuario INT PRIMARY KEY,  
+    id_usuario INT PRIMARY KEY AUTO_INCREMENT,  
     matricula VARCHAR(20) UNIQUE NOT NULL,  
     email_institucional VARCHAR(255) UNIQUE NOT NULL,  
     senha_hash VARCHAR(255) NOT NULL,  
@@ -70,7 +70,7 @@ CREATE TABLE USUARIO
 -- Tabela de Empréstimo
 CREATE TABLE EMPRESTIMO 
 ( 
-    id_emprestimo INT PRIMARY KEY,  
+    id_emprestimo INT PRIMARY KEY AUTO_INCREMENT,  
     data_emprestimo DATE NOT NULL,  
     data_prevista_devolucao DATE NOT NULL,  
     data_devolucao DATE,  
@@ -84,7 +84,7 @@ CREATE TABLE EMPRESTIMO
 -- Tabela de Multa
 CREATE TABLE MULTA 
 ( 
-    id_multa INT PRIMARY KEY,  
+    id_multa INT PRIMARY KEY AUTO_INCREMENT,  
     id_emprestimo INT NOT NULL,
     valor_original DECIMAL(10,2) NOT NULL,  
     valor_atual DECIMAL(10,2) NOT NULL,  
@@ -99,7 +99,7 @@ CREATE TABLE MULTA
 -- Tabela de Reserva
 CREATE TABLE RESERVA 
 ( 
-    id_reserva INT PRIMARY KEY,  
+    id_reserva INT PRIMARY KEY AUTO_INCREMENT,  
     id_usuario INT NOT NULL,  
     id_obra INT NOT NULL,  
     data_reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
@@ -149,7 +149,3 @@ CREATE TABLE OBRA_AUTOR
     FOREIGN KEY (id_obra) REFERENCES OBRA(id_obra),
     FOREIGN KEY (id_autor) REFERENCES AUTOR(id_autor)
 );
-
--- Adicionando a FK faltante em USUARIO (se necessário)
-ALTER TABLE USUARIO ADD COLUMN id_emprestimo INT;
-ALTER TABLE USUARIO ADD FOREIGN KEY(id_emprestimo) REFERENCES EMPRESTIMO(id_emprestimo);
