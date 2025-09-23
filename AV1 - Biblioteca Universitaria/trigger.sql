@@ -1,1 +1,0 @@
--- Bloquear novo empréstimo se houver multas pendentes

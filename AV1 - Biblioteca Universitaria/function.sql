@@ -1,6 +1,5 @@
--- Retornar quantidade de livros emprestados por aluno
-
-CREATE DEFINER = "avnadmin" @"%" FUNCTION "ObterQtdLivrosEmprestados" (p_id_usuario INT) RETURNS int READS SQL DATA DETERMINISTIC BEGIN DECLARE v_qtd_emprestimos INT;
+-- Função para retornar a quantidade de livros emprestados por aluno.
+CREATE DEFINER = "avnadmin" @"%" FUNCTION ObterQtdLivrosEmprestados(p_id_usuario INT) RETURNS int READS SQL DATA DETERMINISTIC BEGIN DECLARE v_qtd_emprestimos INT;
 
 SELECT
     COUNT(*) INTO v_qtd_emprestimos
@@ -12,4 +11,4 @@ WHERE
 
 RETURN v_qtd_emprestimos;
 
-END
+END;
